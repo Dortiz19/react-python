@@ -18,7 +18,7 @@ const Search = ({ word, setWord, handleSubmit }) => {
                                     placeholder="Search for new image" />
                             </Col>
                             <Col>
-                                <Button type="submit" variant="primary">
+                                <Button type="submit" variant="primary" >
                                     Search
                                 </Button>
                             </Col>
