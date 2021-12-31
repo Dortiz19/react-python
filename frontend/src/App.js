@@ -5,6 +5,7 @@ import Search from './components/Search';
 import ImageCard from './components/ImageCard';
 import { Container, Row, Col } from 'react-bootstrap';
 import Welcome from './components/Welcome';
+import Spinner from './components/Spinner';
 import axios from 'axios';
 
 // const UNSPLASH_KEY = process.env.REACT_APP_UNSPLASH_KEY;
@@ -15,11 +16,13 @@ const API_URL = process.env.REACT_APP_API_URL || 'http://127.0.0.1:5050'
 const App = () => {
   const [word, setWord] = useState('');
   const [images, setImages] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const getSavedImages = async () => {
     try {
       const res = await axios.get(`${API_URL}/images`);
       setImages(res.data || []);
+      setIsLoading(false);
     } catch (error) {
       console.log(error);
     }
@@ -40,8 +43,15 @@ const App = () => {
     setWord('');
   };
 
-  const handleDeleteImage = (id) => {
-    setImages(images.filter((image) => image.id !== id));
+  const handleDeleteImage = async (id) => {
+    try {
+      const res = await axios.delete(`${API_URL}/images/${id}`);
+      if (res.data?.deleted_id) {
+        setImages(images.filter((image) => image.id !== id));
+      }
+    } catch (error) {
+      console.log(error);
+    }
   };
 
 
@@ -52,9 +62,9 @@ const App = () => {
     try {
       const res = await axios.post(`${API_URL}/images`, imageToBeSaved);
       if (res.data?.inserted_id) {
-        setImages(images.map((image) => 
+        setImages(images.map((image) =>
           image.id === id ? { ...image, saved: true } : image
-          )
+        )
         );
       }
     } catch (error) {
@@ -65,21 +75,24 @@ const App = () => {
   return (
     <div>
       <Header title='React Python' />
-      <Search word={word} setWord={setWord} handleSubmit={handleSearchSubmit} />
-      <Container className='mt-4'>
-        {images.length ? (
-          <Row xs={1} md={2} lg={3} >
-            {images.map((image, i) =>
-            (<Col key={i} className='pb-3' >
-              <ImageCard saveImage={handleSaveImage} image={image} deleteImage={handleDeleteImage} />
-            </Col>))}
-          </Row>
-        ) : (
-          <Welcome />
-        )}
-
-      </Container>
-    </div>
+      {isLoading ? <Spinner /> : (
+        <div>
+                <Search word={word} setWord={setWord} handleSubmit={handleSearchSubmit} />
+                <Container className='mt-4'>
+                  {images.length ? (
+                    <Row xs={1} md={2} lg={3} >
+                      {images.map((image, i) =>
+                      (<Col key={i} className='pb-3' >
+                        <ImageCard saveImage={handleSaveImage} image={image} deleteImage={handleDeleteImage} />
+                      </Col>))}
+                    </Row>
+                  ) : (
+                    <Welcome />
+                  )}
+                </Container>
+        </div>
+      )}
+          </div>
   );
 }
 
